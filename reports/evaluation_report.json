@@ -1,0 +1,111 @@
+{
+  "generated_at": "2026-01-06T10:06:08.452416",
+  "total_transactions": 4800,
+  "anomalies_detected": "7",
+  "anomaly_rate": 0.0014583333333333334,
+  "risk_breakdown": {
+    "low": 4765,
+    "medium": 28,
+    "high": 7
+  },
+  "by_department": {
+    "is_anomaly": {
+      "Engineering": 0,
+      "Finance": 1,
+      "HR": 1,
+      "Marketing": 0,
+      "Operations": 5,
+      "Sales": 0
+    },
+    "anomaly_score": {
+      "Engineering": 0.07768225770316725,
+      "Finance": 0.0958970775001265,
+      "HR": 0.13106009152042922,
+      "Marketing": 0.10828754478615528,
+      "Operations": 0.09993247228414348,
+      "Sales": 0.10089191450493766
+    }
+  },
+  "top_anomalies": [
+    {
+      "transaction_id": "TXN00001026",
+      "employee_id": "EMP0026",
+      "department": "Operations",
+      "total_amount": 22443.736371591243,
+      "anomaly_score": 0.7968345385675286,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00002264",
+      "employee_id": "EMP0064",
+      "department": "Operations",
+      "total_amount": 19492.67117365235,
+      "anomaly_score": 0.7815926384088696,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00003439",
+      "employee_id": "EMP0039",
+      "department": "Operations",
+      "total_amount": 18664.39888526517,
+      "anomaly_score": 0.7590136745033782,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00000225",
+      "employee_id": "EMP0025",
+      "department": "Operations",
+      "total_amount": 16177.055890271266,
+      "anomaly_score": 0.708093693849092,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00002394",
+      "employee_id": "EMP0194",
+      "department": "Finance",
+      "total_amount": 10926.601302160161,
+      "anomaly_score": 0.7061313286901707,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00001972",
+      "employee_id": "EMP0172",
+      "department": "Operations",
+      "total_amount": 15121.350799056332,
+      "anomaly_score": 0.7006596831197149,
+      "explanation": "Overtime hours exceed normal limits; Overtime pay ratio unusually high"
+    },
+    {
+      "transaction_id": "TXN00002827",
+      "employee_id": "EMP0027",
+      "department": "HR",
+      "total_amount": 20055.611400323276,
+      "anomaly_score": 0.7,
+      "explanation": "Overtime hours exceed normal limits"
+    },
+    {
+      "transaction_id": "TXN00000061",
+      "employee_id": "EMP0061",
+      "department": "Engineering",
+      "total_amount": 16874.65702128975,
+      "anomaly_score": 0.6808117475896069,
+      "explanation": ""
+    },
+    {
+      "transaction_id": "TXN00004775",
+      "employee_id": "EMP0175",
+      "department": "Marketing",
+      "total_amount": 16693.276838075406,
+      "anomaly_score": 0.6749145650530436,
+      "explanation": ""
+    },
+    {
+      "transaction_id": "TXN00001505",
+      "employee_id": "EMP0105",
+      "department": "Engineering",
+      "total_amount": 6978.88318016264,
+      "anomaly_score": 0.6694475333550727,
+      "explanation": ""
+    }
+  ]
+}

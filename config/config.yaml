@@ -1,0 +1,51 @@
+# Anomaly Detection Configuration
+
+data:
+  path: "data/sample_payroll.csv"
+  date_column: "transaction_date"
+
+model:
+  # Isolation Forest parameters
+  isolation_forest:
+    n_estimators: 100
+    contamination: 0.02  # Expected anomaly rate
+    max_samples: "auto"
+    random_state: 42
+
+  # Statistical thresholds
+  statistical:
+    z_score_threshold: 3.0
+    iqr_multiplier: 1.5
+
+  # Autoencoder parameters
+  autoencoder:
+    encoding_dim: 8
+    epochs: 50
+    batch_size: 32
+
+drift:
+  # Page-Hinkley parameters
+  page_hinkley:
+    delta: 0.005
+    lambda_: 50
+    alpha: 0.9999
+
+  # Retraining trigger
+  retrain_threshold: 0.1
+  window_size: 1000
+
+pipeline:
+  batch:
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    lookback_days: 90
+
+  realtime:
+    scoring_timeout_ms: 100
+    buffer_size: 100
+
+alerts:
+  high_risk_threshold: 0.9
+  medium_risk_threshold: 0.7
+  notification_channels:
+    - email
+    - slack
