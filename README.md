@@ -1,118 +1,109 @@
 # Payroll Anomaly Detection
 
-## What this project does
+A Python prototype for investigating unusual payroll transactions through unsupervised learning, interpretable statistical rules, and synthetic evaluation data.
 
-This is an anomaly detection system for payroll data. It detects two main types of fraud:
-- Salary manipulation (when someone's pay is changed without authorization)
-- Fake overtime (claiming OT hours that werent actually worked)
+The project explores how to turn raw salary and overtime records into reviewable signals: learn department and employee baselines, score transactions, explain rule violations, and inspect changes in feature distributions. Its primary workflow is a local batch demonstration.
 
-Since we dont have labeled fraud examples, I used unsupervised learning.
+**Status:** research and portfolio prototype. The supplied data is synthetic. An anomaly flag identifies a transaction for review; it does not establish fraud.
 
-## How to run
+## At a glance
+
+| Area | Implementation |
+| --- | --- |
+| Detection | scikit-learn Isolation Forest combined with salary and overtime rules |
+| Features | 15 numerical features covering peer baselines, employee history, overtime, and time |
+| Evaluation | Injected anomaly labels, confusion counts, precision, recall, and F1 |
+| Drift analysis | Local Page-Hinkley and adaptive-window implementations |
+| Outputs | Saved model components, JSON summary, and Matplotlib/Seaborn charts |
+| Interfaces | Python CLI, batch pipeline, and experimental transaction-stream interface |
+
+## Quick start
+
+Run from the repository root with Python 3 and a virtual environment:
 
 ```bash
-pip install -r requirements.txt
-python main.py --demo      # train and evaluate
-python visualize.py        # generate charts
+git clone https://github.com/MGpromax/payroll-anomaly-detection.git
+cd payroll-anomaly-detection
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+PYTHONHASHSEED=0 python main.py --demo
+MPLBACKEND=Agg python visualize.py
 ```
 
-Or open `notebooks/analysis.ipynb` for a step-by-step walkthrough with explanations.
+On Windows, activate with `.venv\Scripts\Activate.ps1` in PowerShell and set environment variables with `$env:PYTHONHASHSEED = "0"` and `$env:MPLBACKEND = "Agg"` before the Python commands.
 
-## Project files
+The demo generates 4,800 transactions for 200 synthetic employees across 24 periods, including 96 injected anomalies. It then fits the ensemble, scores the same dataset, prints evaluation metrics, and writes artifacts under `data/`, `models/`, and `reports/`. Running it replaces generated files at those paths. `PYTHONHASHSEED` stabilizes the generator's hash-derived approver identifiers.
 
-- `main.py` - run this to start
-- `visualize.py` - generates charts and analysis
-- `src/anomaly_detector.py` - the main ML model (Isolation Forest)
-- `src/feature_engineering.py` - creates features from raw payroll data
-- `src/concept_drift.py` - handles when data patterns change over time
-- `src/pipeline.py` - batch and realtime processing
-- `src/evaluation.py` - how to evaluate without labels
-- `src/data_generator.py` - creates fake payroll data for testing
+The demo and chart commands were smoke-checked with Python 3.9.6 and the dependency versions recorded in [evaluation notes](docs/EVALUATION.md). The requirements use version ranges; a clean install may resolve different versions.
 
-## Why I chose Isolation Forest
+## How it works
 
-I looked at several algorithms and picked Isolation Forest because:
+```text
+Synthetic payroll records
+        |
+        v
+Department, role, employee, and temporal features
+        |
+        +----> Isolation Forest score ----+
+        |                                |
+        +----> Statistical rule flags ---+--> Weighted score + threshold
+                                                  |
+                                                  v
+                                       Flags, explanations, JSON report
 
-1. It doesnt need labeled data (unsupervised)
-2. Its fast - O(n) complexity
-3. It specifically isolates anomalies instead of trying to model "normal" data
-4. Works well with the mixed features we have (numerical + categorical)
-
-I also tried LOF but it was too slow for our data size. K-means didnt make sense because payroll data doesnt form clear clusters.
-
-## Features I created
-
-For salary manipulation:
-- How much someones salary deviates from their department average
-- Percentage change from last month
-- Whether salary is within the expected band for their role
-
-For overtime fraud:
-- OT hours compared to their own history
-- OT hours compared to department average
-- Ratio of OT pay to total pay (flag if too high)
-- Whether OT exceeds their historical max
-
-## Handling concept drift
-
-Payroll data changes over time - people get raises, new employees join, etc. I implemented two methods:
-
-1. Page-Hinkley test - detects sudden changes
-2. ADWIN - adjusts the window size automatically when drift happens
-
-When drift is detected, the system flags that model might need retraining.
-
-## Evaluation (without labels)
-
-This was tricky since we dont know which transactions are actually fraud. I used:
-
-- Silhouette score to check if anomalies are well-separated from normal data
-- Injecting synthetic anomalies and checking if theyre detected
-- Checking if results are stable across multiple runs
-- In production, would need domain experts to review flagged cases
-
-## Results
-
-On the synthetic data (with 2% injected anomalies):
-- Precision is high (detected anomalies are real)
-- Recall depends on threshold setting
-- Runs in about 8 seconds for 4800 transactions
-
-### Sample Output
-
-```
-Dataset: 4,800 transactions
-Anomalies: 96 (2.0%)
-
-Anomaly Types:
-  - fake_overtime: 23
-  - salary_manipulation: 19
-  - duplicate_payment: 18
-  - excessive_overtime: 18
-  - salary_spike: 18
-
-Top Suspicious Transactions:
-  TXN00001026 | Operations | $22,444 | OT: 90h | Type: excessive_overtime
-  TXN00002039 | Operations | $21,909 | OT: 0h  | Type: duplicate_payment
+Feature observations --> Drift monitors --> Review/retraining recommendation
+Injected labels -------> Evaluation metrics
 ```
 
-### Generated Charts
+Isolation Forest learns unusual combinations of features without using the injected labels. Statistical rules add explanations for salary deviations, overtime volume, overtime compensation ratios, and role-band violations. Labels are used to inspect the resulting predictions.
 
-Running `python visualize.py` creates:
-- `reports/anomaly_analysis.png` - distribution and breakdown
-- `reports/time_series.png` - trends over time
-- `reports/feature_analysis.png` - feature correlations
+## Commands and artifacts
 
-## Deployment
+| Command | Behavior |
+| --- | --- |
+| `python main.py --help` | Show CLI options |
+| `python main.py --generate-data` | Regenerate the synthetic CSV files |
+| `python main.py --train` | Train on `data/sample_payroll.csv` and save detector components |
+| `python main.py --evaluate` | Train and evaluate on the CSV data; does not load the saved ensemble |
+| `python main.py --demo` | Generate, train, evaluate, and display sampled batch results |
+| `python main.py --stream` | Demonstrate individual-transaction scoring; see the streaming limitations below |
+| `MPLBACKEND=Agg python visualize.py` | Save charts without an interactive display |
 
-See DEPLOYMENT_PLAN.md for the full plan. Basic idea:
-- Batch pipeline runs daily to retrain and score historical data
-- Realtime pipeline scores new transactions as they come in
-- Alerts go to investigators for review
+`reports/evaluation_report.json` contains aggregate counts, department summaries, and the highest-scoring transactions. Precision, recall, and F1 are printed by the CLI. The visualization script uses the **injected labels**, so its anomaly counts describe the dataset, not the model's detections.
 
-## TODO / improvements
+## Reading the results
 
-- Add more features (day of week patterns, approver analysis)
-- Try autoencoder for comparison
-- Better threshold tuning
-- Add visualization dashboard
+The default full demo uses a decision threshold of `0.7`. A documented smoke run flagged 7 of the 96 injected anomalies, with 7 true positives and 89 false negatives. This illustrates the precision/recall tradeoff at a conservative threshold, not validated performance on real payroll data.
+
+The full demo evaluates its training data, and the score normalization depends on the batch being scored. A proper generalization study therefore needs a time-based holdout, training-only feature statistics, and a stable scoring contract. See [evaluation notes and known limitations](docs/EVALUATION.md) for the complete interpretation.
+
+## Repository guide
+
+```text
+main.py                       CLI and demonstration workflow
+visualize.py                  Charts based on synthetic labels
+src/
+  data_generator.py           Synthetic employees, transactions, and anomalies
+  feature_engineering.py      Baseline and behavioral features
+  anomaly_detector.py         Isolation Forest, rules, and ensemble
+  concept_drift.py            Drift monitors and recommendations
+  pipeline.py                 Batch and experimental streaming interfaces
+  evaluation.py               Additional evaluation utilities
+notebooks/analysis.ipynb      Exploratory walkthrough
+config/config.yaml           Configuration sketch; not loaded by the CLI
+data/                        Sample synthetic inputs and labels
+models/                      Sample serialized detector components
+reports/                     Example report and charts
+docs/EVALUATION.md            Reproduction details and limitations
+DEPLOYMENT_PLAN.md            Proposed path toward a reviewed deployment
+```
+
+## Development priorities
+
+- Establish chronological evaluation with frozen preprocessing and threshold calibration.
+- Make individual and batch scoring consistent, and persist feature-engineering state alongside the detector.
+- Add regression tests for score bounds, rule aggregation, schema validation, and save/load behavior.
+- Validate drift behavior on ordered streams and review alerts with payroll domain experts.
+
+There is currently no automated test suite or deployed service in this repository. [The deployment plan](DEPLOYMENT_PLAN.md) describes proposed work and acceptance criteria.
